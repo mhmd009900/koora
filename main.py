@@ -5,9 +5,6 @@ from datetime import datetime
 import telebot
 from kora_database import *
 from fastapi import FastAPI
-import time
-from datetime import datetime
-from your_module import send_today_matches, monitor_matches  # افصل الكود في ملف آخر
 
 app = FastAPI()
 # إعداد البوت
