@@ -1,7 +1,7 @@
 import sqlite3
 
 def initialize_db():
-    conn = sqlite3.connect('matches.db')
+    conn = sqlite3.connect('matches2.db')
     c = conn.cursor()
 
     # إنشاء جدول المباريات إذا لم يكن موجودًا
@@ -32,7 +32,7 @@ def addData(match_key, team_a, team_b, score_a, score_b, status, match_time):
     except ValueError:
         score_b = 0  # إذا كانت القيمة النصية غير قابلة للتحويل إلى عدد، ضع 0
 
-    conn = sqlite3.connect('matches.db')
+    conn = sqlite3.connect('matches2.db')
     c = conn.cursor()
 
     # إضافة المباراة إلى قاعدة البيانات
@@ -46,7 +46,7 @@ def addData(match_key, team_a, team_b, score_a, score_b, status, match_time):
 
 
 def updateData(score_a, score_b, status, match_key):
-    conn = sqlite3.connect('matches.db')
+    conn = sqlite3.connect('matches2.db')
     c = conn.cursor()
 
     # تحديث البيانات للمباراة المعنية باستخدام match_key
@@ -59,13 +59,13 @@ def updateData(score_a, score_b, status, match_key):
     conn.commit()
     conn.close()
 def delete_all_data():
-    conn = sqlite3.connect('matches.db')
+    conn = sqlite3.connect('matches2.db')
     c = conn.cursor()
     c.execute('DELETE FROM matches')
     conn.commit()
     conn.close()
 def getData(match_key):
-    conn = sqlite3.connect('matches.db')
+    conn = sqlite3.connect('matches2.db')
     c = conn.cursor()
 
     # جلب البيانات باستخدام match_key
