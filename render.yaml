@@ -3,5 +3,5 @@ services:
     name: my-python-app
     env: python
     buildCommand: ""
-    startCommand: python app.py
+    startCommand: python main.py
     plan: free
