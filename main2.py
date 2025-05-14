@@ -117,7 +117,7 @@ def monitor_matches():
 # دالة لتحقق من الوقت الساعة 8 صباحًا وإرسال المباريات
 def check_and_send_matches():
     current_time = datetime.now()
-    if current_time.hour == 23 and current_time.minute == 15:  
+    if current_time.hour == 23 and current_time.minute == 30:  
         send_today_matches()
         time.sleep(60)
 
