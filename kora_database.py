@@ -1,90 +1,77 @@
 import sqlite3
 
-# Connect to SQLite database (creates a new database if it doesn't exist)
-conn = sqlite3.connect('kora.db')
-# Create a cursor object to execute SQL queries
-cursor = conn.cursor()
+def initialize_db():
+    conn = sqlite3.connect('matches.db')
+    c = conn.cursor()
 
-# Create a table
-cursor.execute('''CREATE TABLE IF NOT EXISTS match
-                (id INTEGER PRIMARY KEY,
-                teams TEXT,
-                score_team_a TEXT,
-                score_team_b TEXT
-                )''')
+    # إنشاء جدول المباريات إذا لم يكن موجودًا
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS matches (
+        match_key TEXT PRIMARY KEY,
+        team_a TEXT,
+        team_b TEXT,
+        score_a TEXT,
+        score_b TEXT,
+        status TEXT,
+        match_time TEXT
+    )
+    ''')
 
-cursor.execute('''CREATE TABLE IF NOT EXISTS vid_match
-                (id INTEGER PRIMARY KEY,
-                last_vid TEXT)
-                ''')
-
-
-def addData(teams, scoreA, scoreB):
-    conn = sqlite3.connect('kora.db')
-    # Create a cursor object to execute SQL queries
-    cursor = conn.cursor()
-    # Insert data into the table
-    cursor.execute(
-        "INSERT INTO match (teams,score_team_a,score_team_b) VALUES ( ?,?,?)",
-        (teams, scoreA, scoreB))
-    conn.commit()  # Commit the transaction
-
-
-
-def getData(teams_name):
-    conn = sqlite3.connect('kora.db')
-    # Create a cursor object to execute SQL queries
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM match WHERE teams=?", (teams_name, ))
-    row = cursor.fetchone()
     conn.commit()
-    cursor.close()
-    conn.close()
-    return row
-
-
-def getAllData():
-    conn = sqlite3.connect('kora.db')
-    # Create a cursor object to execute SQL queries
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM match ")
-    row = cursor.fetchall()
-    for r in row:
-        print(r)
-    cursor.close()
     conn.close()
 
+def addData(match_key, team_a, team_b, score_a, score_b, status, match_time):
+    # تأكد من أن score_a و score_b هما أرقام أو قيم فارغة
+    try:
+        score_a = int(score_a)
+    except ValueError:
+        score_a = 0  # إذا كانت القيمة النصية غير قابلة للتحويل إلى عدد، ضع 0
 
-def updateData(new_score_a, new_score_b, team_name):
-    conn = sqlite3.connect('kora.db')
-    # Create a cursor object to execute SQL queries
-    cursor = conn.cursor()
-    # Update data in the table
-    cursor.execute(
-        "UPDATE match SET score_team_a = ?, score_team_b = ? WHERE teams = ?",
-        (new_score_a, new_score_b, team_name))
-    print('############UPDATE TEAM ############')
-    conn.commit()  # Commit the transaction
-    cursor.close()
-    conn.close()
+    try:
+        score_b = int(score_b)
+    except ValueError:
+        score_b = 0  # إذا كانت القيمة النصية غير قابلة للتحويل إلى عدد، ضع 0
 
+    conn = sqlite3.connect('matches.db')
+    c = conn.cursor()
 
-def delete():
-    conn = sqlite3.connect('kora.db')
-    # Create a cursor object to execute SQL queries
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
+    # إضافة المباراة إلى قاعدة البيانات
+    c.execute('''
+    INSERT OR REPLACE INTO matches (match_key, team_a, team_b, score_a, score_b, status, match_time)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (match_key, team_a, team_b, score_a, score_b, status, match_time))
 
-    # Delete all rows from each table
-    for table in tables:
-        cursor.execute("DELETE FROM " + table[0])
-
-    # Commit the transaction
     conn.commit()
-
-    # Close the cursor and connection
-    cursor.close()
     conn.close()
 
 
+def updateData(score_a, score_b, status, match_key):
+    conn = sqlite3.connect('matches.db')
+    c = conn.cursor()
+
+    # تحديث البيانات للمباراة المعنية باستخدام match_key
+    c.execute('''
+    UPDATE matches 
+    SET score_a = ?, score_b = ?, status = ?
+    WHERE match_key = ?
+    ''', (score_a, score_b, status, match_key))
+
+    conn.commit()
+    conn.close()
+def delete_all_data():
+    conn = sqlite3.connect('matches.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM matches')
+    conn.commit()
+    conn.close()
+def getData(match_key):
+    conn = sqlite3.connect('matches.db')
+    c = conn.cursor()
+
+    # جلب البيانات باستخدام match_key
+    c.execute('SELECT * FROM matches WHERE match_key = ?', (match_key,))
+    data = c.fetchone()
+
+    conn.close()
+    return data
+initialize_db()
