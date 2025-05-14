@@ -117,7 +117,7 @@ def monitor_matches():
 # دالة لتحقق من الوقت الساعة 8 صباحًا وإرسال المباريات
 def check_and_send_matches():
     current_time = datetime.now()
-    if current_time.hour == 8 and current_time.minute == 0:  
+    if current_time.hour == 23 and current_time.minute == 15:  
         send_today_matches()
         time.sleep(60)
 
@@ -128,6 +128,9 @@ def root():
 
 @app.get("/start")
 def start_bot():
-    send_today_matches()
-    monitor_matches()
+    for _ in range(30):
+        send_today_matches()
+        monitor_matches()
+        time.sleep(10)
+        
     return {"status": "✅ matches checked and sent"}
