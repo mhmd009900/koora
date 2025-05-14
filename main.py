@@ -4,7 +4,12 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import telebot
 from kora_database import *
+from fastapi import FastAPI
+import time
+from datetime import datetime
+from your_module import send_today_matches, monitor_matches  # افصل الكود في ملف آخر
 
+app = FastAPI()
 # إعداد البوت
 bot_token = '1981790629:AAGXe9sBFiWWhzsUaeK-8ie7AhgRnYtKV_E'
 chat_id = '@test829435'  
@@ -120,9 +125,12 @@ def check_and_send_matches():
         time.sleep(60)
 
 
-while True:
-    try:
-        check_and_send_matches()
-        monitor_matches()
-        time.sleep(15)
-    except Exception as e:print(e)
+@app.get("/")
+def root():
+    return {"message": "Service is running!"}
+
+@app.get("/start")
+def start_bot():
+    send_today_matches()
+    monitor_matches()
+    return {"status": "✅ matches checked and sent"}
