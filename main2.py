@@ -128,9 +128,7 @@ def root():
 
 @app.get("/start")
 def start_bot():
-    for _ in range(15):
-        check_and_send_matches()
-        monitor_matches()
-        time.sleep(20)
+    check_and_send_matches()
+    monitor_matches()
         
     return {"status": "✅ matches checked and sent"}
