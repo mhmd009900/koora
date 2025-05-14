@@ -1,103 +1,128 @@
-import os
+import time
 import requests
 from bs4 import BeautifulSoup
-import re
-import schedule
-import time
 from datetime import datetime
 import telebot
 from kora_database import *
 
+# إعداد البوت
 bot_token = '1981790629:AAGXe9sBFiWWhzsUaeK-8ie7AhgRnYtKV_E'
+chat_id = '@test829435'  
 bot = telebot.TeleBot(bot_token)
 
-def send_message(message):
-    bot.send_message('@test829435', message)
+def send_message(msg):
+    bot.send_message(chat_id, msg)
 
-today = datetime.now().strftime("%m/%d/%Y")
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
+
 def get_request(match_type):
-    res = requests.get(
-        "https://www.yallakora.com/match-center/%D9%85%D8%B1%D9%83%D8%B2-%D8%A7%D9%84%D9%85%D8%A8%D8%A7%D8%B1%D9%8A%D8%A7%D8%AA?date={today}#days"
-    )
-    soup = BeautifulSoup(res.content, 'html.parser')
-    # Find all div elements with class "item finish liItem"
-    match_divs = soup.find_all('div', class_=f'item {match_type} liItem')
-    return match_divs
+    today = datetime.now().strftime("%m/%d/%Y")
+    url = f"https://www.yallakora.com/match-center/مركز-المباريات?date={today}#days"
 
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        )
+    }
 
-def get_match_info(match_div, addata=None):
-    # Extract team A data
-    team_a = match_div.find('div', class_='teams teamA').find('p').text.strip()
-    # Extract team B data
-    team_b = match_div.find('div', class_='teams teamB').find('p').text.strip()
-    # Extract match result data
-    score_elems = match_div.find('div',
-                                 class_='MResult').find_all('span',
-                                                            class_='score')
-    match_status = match_div.find('div',
-                                 class_='matchStatus').find('span').text.strip()
-    score_team_a = score_elems[0].text.strip()
-    score_team_b = score_elems[1].text.strip()
-    
-    if addata == True:
-        addData(f'{team_a},{team_b}', score_team_a, score_team_b)
-    match_time = match_div.find('div', class_='MResult').find(
-        'span', class_='time').text.strip()
-    return f""" {team_a} Vs {team_b} \n النتيجة : {score_team_a}    -    {score_team_b} \n وقت المباراة : {match_time} \n"""
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
+    match_cards = soup.find_all("div", class_=lambda c: c and "matchCard" in c)
+    matches_divs=[]
+    for card in match_cards:
+        title_tag = card.find("div", class_="title")
+        league_name = title_tag.h2.get_text(strip=True) if title_tag and title_tag.h2 else ""
+        excluded_keywords = ['كرة السلة', 'سيدات', 'لكرة اليد']
+        if any(keyword in league_name for keyword in excluded_keywords):
+            pass
 
-def chech_result():
-    match_divs = get_request('now')
-    for match_div in match_divs:
-        match_status = match_div.find('div',
-                                 class_='matchStatus').find('span').text.strip()
-        score_elems = match_div.find('div',
-                                     class_='MResult').find_all('span',
-                                                                class_='score')
-        score_team_a = score_elems[0].text.strip()
-        #score_team_a='1'
-        score_team_b = score_elems[1].text.strip()
-        team_a = match_div.find('div',
-                                class_='teams teamA').find('p').text.strip()
-        team_b = match_div.find('div',
-                                class_='teams teamB').find('p').text.strip()
-        print(f'_______{match_status}_______\n  \n {get_match_info(match_div)}')
-        try:
-            teamName = getData(f'{team_a},{team_b}')
-        except:
-            teamName = None
-        if teamName:
-            print('Match exsit')
-            sql_score_team_a = teamName[2]
-            sql_score_team_b = teamName[3]
-            if int(sql_score_team_a) == int(score_team_a) and int(sql_score_team_b) == int(score_team_b):
-                print('the same Result')
-            else:
-                print('new data')
-                if int(score_team_a) > int(sql_score_team_a) or int(score_team_b) > int(sql_score_team_b):
-                    print('new goals')
-                    #send_message(f''' جوووووووووووووووووول \n _______{match_status}_______\n  \n {get_match_info(match_div)}''')
-                    updateData(score_team_a, score_team_b, f'{team_a},{team_b}')
-                    time.sleep(5)
         else:
-            addData(f'{team_a},{team_b}', score_team_a, score_team_b)
-            print('Adedd Data')
+            matches_divs += card.find_all("div", class_=f"item {match_type} liItem")
+    return matches_divs
 
 
-def send_all_matches():
-    delete()
-    send_message('###### جدول مباريات اليوم ######')
+def extract_match_data(match_div):
+    team_a = match_div.find('div', class_='teams teamA').find('p').text.strip()
+    team_b = match_div.find('div', class_='teams teamB').find('p').text.strip()
+    match_status = match_div.find('div', class_='matchStatus').find('span').text.strip()
+    scores = match_div.find('div', class_='MResult').find_all('span', class_='score')
+    score_a = scores[0].text.strip()
+    score_b = scores[1].text.strip()
+    match_time = match_div.find('div', class_='MResult').find('span', class_='time').text.strip()
+    print(team_a, team_b, score_a, score_b, match_time, match_status)
+    return team_a, team_b, score_a, score_b, match_time, match_status
+
+
+def format_match_info(team_a, team_b, score_a, score_b, match_time):
+    print(f"{team_a} Vs {team_b}\n🕓 الوقت: {match_time}\n📊 النتيجة: {score_a} - {score_b}")
+    return f"{team_a} Vs {team_b}\n🕓 الوقت: {match_time}\n📊 النتيجة: {score_a} - {score_b}"
+
+
+def send_today_matches():
+    try:
+        delete_all_data()
+    except:pass
+    send_message("📅 جدول مباريات اليوم:")
     match_divs = get_request('future')
     for match_div in match_divs:
-        print(get_match_info(match_div))
-        send_message(get_match_info(match_div))
-
-
-#send_all_matches()
-schedule.every().day.at('14:47').do(send_all_matches)
-if __name__ == '__main__':
-    while True:
-        schedule.run_pending()
-        chech_result()
+        team_a, team_b, score_a, score_b, match_time, status = extract_match_data(match_div)
+        match_key = f"{team_a},{team_b}"  # إنشاء مفتاح فريد للمباراة
+        addData(match_key, team_a, team_b, score_a, score_b, status, match_time)  # حفظ المباراة في قاعدة البيانات
+        msg = format_match_info(team_a, team_b, score_a, score_b, match_time)
+        send_message(msg)
         time.sleep(1)
 
+def monitor_matches():
+    match_divs = get_request('now')
+    for match_div in match_divs:
+        team_a, team_b, score_a, score_b, match_time, status = extract_match_data(match_div)
+        match_key = f"{team_a},{team_b}"
+        data = getData(match_key)
+
+        if data:
+            old_score_a = int(data[3])  # النتيجة القديمة لفريق A
+            old_score_b = int(data[4])  # النتيجة القديمة لفريق B
+            old_status = data[5]  # حالة المباراة
+
+            # إشعار ببداية المباراة إذا كانت الحالة تغيرت
+            if old_status != status and status in ['انطلقت', 'جارية']:
+                send_message(f"🚨 بدأت المباراة!\n{team_a} 🆚 {team_b}")
+
+            # مقارنة الأهداف
+            if int(score_a) != old_score_a or int(score_b) != old_score_b:
+                # تم تسجيل هدف جديد، إرسال إشعار
+                if int(score_a) > old_score_a:
+                    send_message(f"🎯 جوووول! {team_a} يسجل هدفًا!")
+                if int(score_b) > old_score_b:
+                    send_message(f"🎯 جوووول! {team_b} يسجل هدفًا!")
+
+                # إرسال النتيجة المحدثة
+                send_message(format_match_info(team_a, team_b, score_a, score_b, match_time))
+
+                # تحديث البيانات في قاعدة البيانات
+                updateData(score_a, score_b, status, match_key)
+
+        else:
+            # إذا كانت المباراة جديدة في قاعدة البيانات
+            addData(match_key, team_a, team_b, score_a, score_b, status, match_time)
+
+
+# دالة لتحقق من الوقت الساعة 8 صباحًا وإرسال المباريات
+def check_and_send_matches():
+    current_time = datetime.now()
+    if current_time.hour == 8 and current_time.minute == 0:  
+        send_today_matches()
+        time.sleep(60)
+
+
+while True:
+    try:
+        check_and_send_matches()
+        monitor_matches()
+        time.sleep(15)
+    except Exception as e:print(e)
