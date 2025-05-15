@@ -35,7 +35,7 @@ def get_request(match_type):
     for card in match_cards:
         title_tag = card.find("div", class_="title")
         league_name = title_tag.h2.get_text(strip=True) if title_tag and title_tag.h2 else ""
-        excluded_keywords = ['كرة السلة', 'سيدات', 'لكرة اليد']
+        excluded_keywords = ['كرة السلة', 'سيدات', 'لكرة اليد','كأس أفريقيا للأندية أبطال الكؤوس','دوري القسم الثاني']
         if any(keyword in league_name for keyword in excluded_keywords):
             continue
         matches_divs += card.find_all("div", class_=f"item {match_type} liItem")
