@@ -100,7 +100,7 @@ def monitor_matches():
 
 def check_and_send_matches():
     current_time = datetime.now()
-    if current_time.hour == 23 and current_time.minute == 30:
+    if current_time.hour == 23 and current_time.minute == 0:
         send_today_matches()
         time.sleep(60)
 
@@ -108,6 +108,7 @@ def check_and_send_matches():
 def background_monitor():
     while True:
         try:
+            check_and_send_matches()
             monitor_matches()
         except Exception as e:
             print(f"Error in monitor_matches: {e}")
