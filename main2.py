@@ -102,11 +102,11 @@ def check_and_send_matches():
     current_time = datetime.now()
     print(current_time.hour)
     print(current_time.minute)
-    if current_time.hour == 15 and current_time.minute == 10:
+    if current_time.hour == 6 and current_time.minute == 00:
         send_today_matches()
         time.sleep(60)
 
-# تعمل عند بدء السيرفر تلقائيًا
+
 def background_monitor():
     while True:
         try:
@@ -114,7 +114,7 @@ def background_monitor():
             monitor_matches()
         except Exception as e:
             print(f"Error in monitor_matches: {e}")
-        time.sleep(15)  # كل 15 ثانية
+        time.sleep(10) 
 
 @app.on_event("startup")
 def start_background_tasks():
@@ -127,8 +127,3 @@ def start_background_tasks():
 def root():
     return {"message": "✅ Service is running!"}
 
-@app.get("/start")
-def start_bot():
-    check_and_send_matches()
-    monitor_matches()
-    return {"status": "✅ Manual check triggered"}
