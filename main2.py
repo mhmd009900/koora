@@ -102,7 +102,7 @@ def check_and_send_matches():
     current_time = datetime.now()
     print(current_time.hour)
     print(current_time.minute)
-    if current_time.hour == 23 and current_time.minute == 0:
+    if current_time.hour == 15 and current_time.minute == 5:
         send_today_matches()
         time.sleep(60)
 
